@@ -6,7 +6,7 @@ C: -Nat -(List Nat) (List Nat)
 
 (l:(List Nat)
   (List.filter Nat Nat.isZero
-    (List.zipWith Nat Nat.add
+    (List.zipWith Nat Nat Nat Nat.add
       (List.map Nat Nat (Nat.add (S Z)) l)
       (List.map Nat Nat (Nat.add (S Z)) l))))
 

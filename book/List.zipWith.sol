@@ -1,17 +1,17 @@
+t: *
 u: *
-f: -u -u u
-a: (List u)
+v: *
+f: -t -u v
+a: (List t)
 b: (List u)
 List: *
-cons: -u -List List
+cons: -v -List List
 nil: List
 (B:*
   (a (- B List)
-    (h:u t:(- B List) k:B (k t h))
+    (x:t xs:(- B List) k:B (k xs x))
     (k:B nil)
   (b B
-    (x:u t:B k:(-B List) y:u (cons (f x y) (k t)))
-    (k:(-B List) x:u nil)))
-  r@(-(-r List) (-u List)))
-
-TODO: make this work for lists of different types
+    (y:u xs:B k:(-B List) x:t (cons (f x y) (k xs)))
+    (k:(-B List) x:t nil)))
+  r@(-(-r List) (-t List)))
