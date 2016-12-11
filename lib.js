@@ -32,8 +32,9 @@ module.exports = (function(persist){
     for (var i=0, l=db[name].below.length; i<l; ++i)
       db[db[name].below[i]].above[name] = true;
     db[name].term = parsed.term;
-    db[name].code = source;
+    db[name].code = source.slice(0, parsed.index);
     db[name].name = name;
+    db[name].info = source.slice(parsed.index).replace(/^ */, "");
 
     // Computes the normal forms
     var updated = {};
@@ -45,7 +46,7 @@ module.exports = (function(persist){
             term = sol.Lam(db[db[name].below[i]].type, term);
           for (var i=db[name].below.length-1; i>=0; --i)
             term = sol.App(term, db[db[name].below[i]].norm);
-          db[name].full = term;
+          db[name].base = term;
 
           var checked = sol.hoas(term, 1);
           db[name].type = checked.term;
@@ -70,12 +71,16 @@ module.exports = (function(persist){
       names[stx.show(db[name].norm)] = name;
   };
 
-  function code(name, expandAll){
+  function code(name){
     return db[name].code;
   };
 
-  function full(name, expandAll){
-    return show(db[name].full, expandAll ? "*" : name);
+  function info(name){
+    return db[name].info;
+  };
+
+  function base(name, expandAll){
+    return show(db[name].base, expandAll ? "*" : name);
   };
 
   function norm(name, expandAll){
@@ -84,6 +89,10 @@ module.exports = (function(persist){
 
   function type(name, expandAll){
     return show(db[name].type, expandAll ? "*" : name);
+  };
+
+  function list(name){
+    return Object.keys(db);
   };
 
   function data(term){
@@ -156,9 +165,11 @@ module.exports = (function(persist){
     set: set,
     data: data,
     code: code,
-    full: full,
+    info: info,
+    base: base,
     norm: norm,
     type: type,
+    list: list,
     exists: exists,
     print: print
   };
