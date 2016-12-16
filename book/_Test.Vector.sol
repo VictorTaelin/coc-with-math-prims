@@ -2,11 +2,11 @@
 S: -Nat Nat
 Z: Nat
 
-  (Id.the (Vec Nat (S (S (S Z))))
-    (Vec.Cons Nat (S (S Z)) Z
-    (Vec.Cons Nat    (S Z)  Z
-    (Vec.Cons Nat       Z   Z
-    (Vec.Nil Nat Z)))))
+  (Id.the (Vector Nat (S (S (S Z))))
+    (Vector.Cons Nat (S (S Z)) Z
+    (Vector.Cons Nat    (S Z)  Z
+    (Vector.Cons Nat       Z   Z
+    (Vector.Nil Nat Z)))))
 
 Nat.Succ
 Nat.Zero

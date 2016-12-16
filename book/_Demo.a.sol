@@ -1,0 +1,1 @@
+(Nat.Pred Nat.Zero)

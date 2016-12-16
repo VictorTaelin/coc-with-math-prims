@@ -2,7 +2,7 @@ t: *
 n: Nat
 
 head: t
-tail: (Vec t n)
+tail: (Vector t n)
 
 Vec: -Nat *
 Cons: n-Nat -t -(Vec n) (Vec (Nat.Succ n))
