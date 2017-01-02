@@ -125,6 +125,7 @@ module.exports = (function(){
                 case 18: return Num(a.val  >  b.val ? 1 : 0);
                 case 19: return Num(a.val  >= b.val ? 1 : 0);
                 case 20: return Num(a.val === b.val ? 1 : 0);
+                case 21: return Num(Math.floor(a.val) + Math.ceil(b.val));
                 default: return Num(a.val + b.val);
               };
             };

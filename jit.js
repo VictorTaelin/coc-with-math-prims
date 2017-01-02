@@ -41,6 +41,7 @@ module.exports = (function(){
           case 18: return a  >  b ? 1 : 0;
           case 19: return a  >= b ? 1 : 0;
           case 20: return a === b ? 1 : 0;
+          case 21: return Math.floor(a) + Math.ceil(b);
           default: return a + b;
         };
       } else {
