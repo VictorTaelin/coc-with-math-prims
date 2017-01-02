@@ -11,73 +11,119 @@ module.exports = (function(){
     var index = index || 0;
     var deps = [];
     var used = {};
-    var term = (function parse(depth, binders){
+    var term = (function parse(){
       while (/[^a-zA-Z\(\)_0-9\.@:\-\*\%\#\{\}\[\]]/.test(source[index]||""))
         ++index;
       if (source[index] === "("){
         ++index;
-        var app = parse(depth, binders);
+        var app = parse();
+        var arg = [];
         while (source[index] !== ")"){
-          app = S.App(app, parse(depth, binders));
+          arg.push(parse());
           while (/\s/.test(source[index])) ++index;
         };
         ++index;
-        return app; 
+        return function(depth, binders, aliases){
+          var appTerm = app(depth, binders, aliases);
+          for (var i=0, l=arg.length; i<l; ++i)
+            appTerm = S.App(appTerm, arg[i](depth, binders, aliases));
+          return appTerm; 
+        };
       } else if (source[index] === "*"){
         ++index;
-        return S.Set;
+        return function(depth, binders, aliases){
+          return S.Set;
+        };
       } else if (source[index] === "#"){
         ++index;
-        return S.Nty;
+        return function(depth, binders, aliases){
+          return S.Nty;
+        };
       } else if (source[index] === "["){
         ++index;
-        var nop = S.Nap(
-          parse(depth,binders),
-          parse(depth,binders),
-          parse(depth,binders));
+        var arg = [parse(), parse(), parse()]
         ++index;
-        return nop;
+        return function(depth, binders, aliases){
+          return S.Nap(
+            arg[0](depth, binders, aliases),
+            arg[1](depth, binders, aliases),
+            arg[2](depth, binders, aliases));
+        };
       } else if (source[index] === "{"){
         ++index;
-        var nop = S.Nop(
-          parse(depth,binders),
-          parse(depth,binders),
-          parse(depth,binders));
+        var arg = [parse(), parse(), parse()]
         ++index;
-        return nop;
+        return function(depth, binders, aliases){
+          return S.Nop(
+            arg[0](depth, binders, aliases),
+            arg[1](depth, binders, aliases),
+            arg[2](depth, binders, aliases));
+        };
       } else if (/[0-9]/.test(source[index])) {
         for (var num = ""; /[0-9\.]/.test(source[index]); ++index)
           num += source[index];
-        return S.Num(Number(num));
+        return function(depth, binders, aliases){
+          return S.Num(Number(num));
+        };
       } else {
         var binder = "";
         while (/[a-zA-Z0-9_.]/.test(source[index]||""))
           binder += source[index++];
         if (source[index] === ":"){
           ++index;
-          return S.Lam(parse(depth, binders), parse(depth+1, binders.concat(binder)));
+          var type = parse();
+          var body = parse();
+          return function(depth, binders, aliases){
+            return S.Lam(
+              type(depth, binders, aliases),
+              body(depth+1, binders.concat(binder), aliases));
+          };
         } else if (source[index] === "-"){
           ++index;
-          return S.For(parse(depth, binders), parse(depth+1, binders.concat(binder)));
+          var type = parse();
+          var body = parse();
+          return function(depth, binders, aliases){
+            return S.For(
+              type(depth, binders, aliases),
+              body(depth+1, binders.concat(binder), aliases));
+          };
         } else if (source[index] === "@"){
           ++index;
-          return S.Fix(parse(depth+1, binders.concat(binder)));
-        } else{
-          var binderIndex = binders.lastIndexOf(binder);
-          if (binderIndex === -1){
-            if (!(used[binder] < 0)){
-              deps.push(binder);
-              binderIndex = -deps.length;
-              used[binder] = binderIndex;
-            } else {
-              binderIndex = used[binder];
-            }
+          var body = parse();
+          return function(depth, binders, aliases){
+            return S.Fix(body(depth+1, binders.concat(binder), aliases));
           };
-          return S.Var(depth - binderIndex - 1);
+        } else if (source[index] === "="){
+          ++index;
+          var value = parse();
+          var context = parse();
+          return function(depth, binders, aliases){
+            var newAliases = {};
+            for (var key in aliases)
+              newAliases[key] = aliases[key];
+            newAliases[binder] = value;
+            return context(depth, binders, newAliases);
+          };
+        } else{
+          return function(depth, binders, aliases){
+            if (aliases[binder]){
+              return aliases[binder](depth, binders, aliases);
+            };
+            var binderIndex = binders.lastIndexOf(binder);
+            if (binderIndex === -1){
+              if (!(used[binder] < 0)){
+                deps.push(binder);
+                binderIndex = -deps.length;
+                used[binder] = binderIndex;
+              } else {
+                binderIndex = used[binder];
+              }
+            };
+            return S.Var(depth - binderIndex - 1);
+          };
         };
       }
-    })(0, [], 0);
-
+    })()(0, [], []);
     return {term: term, deps: deps, index: index};
   };
 
