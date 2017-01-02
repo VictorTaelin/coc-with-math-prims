@@ -85,7 +85,7 @@ module.exports = (function(){
           if (mode === TYPE){
             return Set;
           } else {
-          return Fix(function(v){ return eval(term.ter, mode, extend(v, Set, ctx))});
+            return Fix(function(v){ return eval(term.ter, mode, extend(v, Set, ctx))});
           };
         case SET: // The type of types
           return Set;
