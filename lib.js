@@ -1,6 +1,6 @@
 // Runtime observables and disk persistency.
 
-module.exports = (function(persist){
+module.exports = (function(persist, untyped){
   var sol = require("./sol.js");
   var stx = require("./stx.js");
   var jit = require("./jit.js"); // TODO: use this rather than sol.norm
@@ -43,23 +43,24 @@ module.exports = (function(persist){
         if (!updated[name]){
           var term = db[name].term;
           for (var i=0, l=db[name].below.length; i<l; ++i)
-            term = sol.Lam(db[db[name].below[i]].type, term);
+            term = sol.Lam(untyped ? sol.Set : db[db[name].below[i]].type, term);
           for (var i=db[name].below.length-1; i>=0; --i)
             term = sol.App(term, db[db[name].below[i]].norm);
           db[name].base = term;
 
-          var checked = sol.hoas(term, 1);
-          db[name].type = checked.term;
-          if (checked.errors.length > 0)
-            console.log(checked.errors.map(function(err){
-              return "| Type mismatch  | "+name+"\n"+
-                     ": The term       : "+stx.show(err.term)+"\n"+
-                     ": Must have type : "+stx.show(err.expected)+"\n"+
-                     ": But has type   : "+stx.show(err.actual)+"\n";
-            }).join("\n"));
+          if (!untyped){
+            var checked = sol.check(term);
+            db[name].type = checked.term;
+            if (checked.errors.length > 0)
+              console.log(checked.errors.map(function(err){
+                return "| Type mismatch  | "+name+"\n"+
+                      ": The term       : "+stx.show(err.term)+"\n"+
+                      ": Must have type : "+stx.show(err.expected)+"\n"+
+                      ": But has type   : "+stx.show(err.actual)+"\n";
+              }).join("\n"));
+          };
 
-          db[name].norm = sol.norm(term);
-          updated[name] = true;
+          db[name].norm = (untyped?jit:sol).norm(term);
           for (var above in db[name].above)
             if (name !== above)
               refresh(above);

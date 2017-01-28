@@ -82,6 +82,7 @@ module.exports = (function(){
             return For(typ, val);
           };
         case FIX: // Fixed points
+          return Fix(function(v){ return eval(term.ter, mode, extend(v, Set, ctx))});
           if (mode === TYPE){
             return Set;
           } else {
@@ -140,9 +141,9 @@ module.exports = (function(){
               errors.push({type: "TypeError"});
             return f.bod(x);
           } else {
-            if (n.ctor === NUM && f.ctor === LAM){
+            if (n.ctor === NUM){
               for (var i=0, l=n.val; i<l; ++i)
-                x = f.bod(x);
+                x = f.ctor === LAM ? f.bod(x) : App(f,x);
               return x;
             } else return Nap(n, f, x);
           };
@@ -177,6 +178,11 @@ module.exports = (function(){
     return hoas(term, 1, bipass).term;
   };
 
+  // Infers type & returns errors
+  function check(term){
+    return hoas(term, 1, 0);
+  };
+
   return {
     Var: Var, VAR: VAR,
     App: App, APP: APP,
@@ -190,6 +196,7 @@ module.exports = (function(){
     Nty: Nty, NTY: NTY,
     hoas: hoas,
     norm: norm,
-    type: type
+    type: type,
+    check: check
   };
 })();

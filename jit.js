@@ -6,12 +6,14 @@ module.exports = (function(){
   var VAR = S.VAR, Var = S.Var,
       APP = S.APP, App = S.App,
       LAM = S.LAM, Lam = S.Lam,
+      FOR = S.FOR, For = S.For,
       FIX = S.FIX, Fix = S.Fix,
       SET = S.SET, Set = S.Set,
       NUM = S.NUM, Num = S.Num,
       NOP = S.NOP, Nop = S.Nop,
       NAP = S.NAP; Nap = S.Nap,
-      NTY = S.NTY, Nty = S.Nty;
+      NTY = S.NTY, Nty = S.Nty,
+      NIL = 3752880792037992;
 
   function toJS(term){
     function App(a,b){
@@ -57,20 +59,22 @@ module.exports = (function(){
         return S.Nap(n, f, x);
       };
     };
-    return eval("(function($App,$Set,$Num,$Nop,$Nap){return "+(function go(term, d){
+    var code ="(function($App,$Nop,$Nap){return "+(function go(term, d){
       switch (term.ctor){
-        case VAR: return "v"+(d-term.idx-1);
+        case VAR: 
+          return "v"+(d-term.idx-1);
         case APP: return "$App("+go(term.fun,d)+","+go(term.arg,d)+")";
         case LAM: return "(function(v"+d+"){return "+go(term.bod,d+1)+"})";
+        case FOR: return "null";
         case FIX: return "[(function(v"+d+"){return "+go(term.ter,d+1)+"})]";
-        case SET: return "$Set";
+        case SET: return "null";
         case NUM: return term.val;
         case NOP: return "$Nop("+go(term.o,d)+","+go(term.a,d)+","+go(term.b,d)+")";
         case NAP: return "$Nap("+go(term.n,d)+","+go(term.f,d)+","+go(term.x,d)+")";
-        case NTY: return "$Num";
+        case NTY: return "null";
       };
-    })(term,0)+"})")(App, null, NaN, Nop, Nap);
-    ;
+    })(term,0)+"})";
+    return eval(code)(App, Nop, Nap);
   };
 
   function fromJS(term){
@@ -78,7 +82,7 @@ module.exports = (function(){
       return (function nf(value, depth){
         function app(fun){
           function getArg(arg){
-            return arg === null ? fun : app(function(d){
+            return arg === NIL ? fun : app(function(d){
               return App(fun(d), nf(arg, d));
             });
           };
@@ -88,7 +92,7 @@ module.exports = (function(){
         if (value === null) {
           return Set;
         } else if (value.isApp) {
-          return value(null)(depth);
+          return value(NIL)(depth);
         } else if (typeof value === "number") {
           return isNaN(value) ? Nty : Num(value);
         } else if (value.ctor === APP) {
@@ -99,7 +103,7 @@ module.exports = (function(){
           return Nap(nf(value.n, depth), nf(value.f, depth), nf(value.x, depth));
         } else if (typeof value === "function") {
           return Lam(Set, nf(value(app(function(d){return Var(d-1-depth)})), depth+1));
-        } else if (typeof value === "object") {
+        } else if (typeof value === "object" && value[0]) {
           return Fix(nf(value[0](app(function(d){return Var(d-1-depth)})), depth+1));
         } else return value;
       })(value, 0);
