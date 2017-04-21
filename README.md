@@ -9,3 +9,5 @@ Sol is both a *lightweight code-interchange format*, and a *functional programmi
 - It also includes a fast parser/serializer, an [observable-based runtime](https://github.com/MaiaVictor/PureState) and a compiler to/from native functions, making use of JS's JIT engines to achieve good performances.
 
 - I'll be using it as both an experiment lab to explore/learn dependent types, and as a minimal runtime to validate the proposal of writing actual programs with a small core language.
+
+For a similar language without floating points, check out [calculus-of-constructions](https://github.com/maiavictor/calculus-of-constructions).
